@@ -7,15 +7,19 @@ library(dplyr)
 library(extrafont)
 library(RCurl)
 font_import() ## Press y in the console to import fonts, and wait for it to finish
-setwd('/Users/abhinavsingh/Downloads/CS_710/Practice R project/Core/Coffee')
+pal <- c("#A6CEE3", "#1F78B4", "#B2DF8A", "#33A02C", 
+         "#FB9A99", "#E31A1C", "#FDBF6F", "#FF7F00", 
+         "#CAB2D6","#6A3D9A", "#E9E909", "#B15928") 
 
-pal <- c("#A6CEE3", "#1F78B4", "#B2DF8A", "#33A02C", "#FB9A99", "#E31A1C", "#FDBF6F", "#FF7F00", "#CAB2D6",
-         "#6A3D9A", "#E9E909", "#B15928") 
+#The dataset I will be using for the visualisation
+#x <- getURL("https://raw.githubusercontent.com/abhinavsingh101/cs710_final/main/coffee_data_i.csv")
+#y <- getURL("https://raw.githubusercontent.com/abhinavsingh101/cs710_final/main/coffee_data_regions50.csv")
 
-x <- getURL("https://raw.githubusercontent.com/abhinavsingh101/cs710_final/main/coffee_data_i.csv")
+#df <- read.csv(text = x)
 
-df <- read.csv(text = x)
 ##Which countries the major coffee varieties come from
+df <- read.csv('coffee_data_i.csv')
+
 {
   df$variety <- as.factor(df$variety)
   
@@ -67,26 +71,26 @@ ggsave(variety,filename = "variety.png", width = 14, height = 8, dpi = 320,
        device = "jpeg", path = "/Users/abhinavsingh/Downloads/CS_710/Practice R project/Core/Coffee/", units = "in")  
 
 ##The best coffee producing companies (by country)
-df <- read.csv(text = x)
+df <- read.csv('coffee_data_i.csv')
 {
-#  df <- read_csv('coffee_data_i.csv')
-  
   top_producers_df <- df%>%
     group_by(producer, region, country_of_origin, variety, processing_method)%>%
     summarise(vol = sum(volume),
               cupping_points=median(total_cup_points)
     ) %>%
     filter(vol>100000 & cupping_points > 80)
+  
   top_producers_df$variety=ifelse(is.na(top_producers_df$variety),"Missing",top_producers_df$variety)
   top_producers_df$processing_method = ifelse(is.na(top_producers_df$processing_method),"Missing",top_producers_df$processing_method)
   
   producers<- top_producers_df %>%
-    ggplot(aes(size=vol, x = country_of_origin, y=cupping_points,color=variety, shape=processing_method)) +
+    ggplot(aes(size=vol, x = country_of_origin, y=cupping_points, 
+               color=variety, shape=processing_method)) +
     geom_jitter(alpha=0.7, width=0.2) +
     scale_shape_manual(values=c('Natural / Dry'= 16, 'Missing'=18, 'Washed / Wet' = 17)) +
     scale_color_manual(values=c('Bourbon' = "#E41A1C", 'SL28' = "#FF7F00", 'SL14' = "#A65628",
                                 'Caturra' = '#984EA3', 'Other' = "#4DAF4A", 'Missing' = "#F781BF")) +
-    scale_size(range = c(10, 25)) +
+    scale_size(range = c(10, 25))+
     geom_label_repel(aes(label = ifelse(vol>1000000 | cupping_points > 82.5 ,as.character(producer), "")),
                      min.segment.length = Inf,
                      box.padding   = 0.2,
@@ -97,7 +101,7 @@ df <- read.csv(text = x)
                      show.legend = Inf)+
     labs(title="The best coffee producing companies in the world (by country)",
          subtitle = "along with their variety, processing methods and sales volume",
-         x ="Country of origin", y = "Cupping points") +
+         x ="Country of origin", y = "Cupping points")+
     guides(colour = guide_legend(title = 'Coffee variety', override.aes = list(size=8, alpha=0.8)), alpha=FALSE, 
            size = guide_legend(title = 'Total volume'),
            shape = guide_legend(title = 'Processing method', override.aes = list(size=8))) +
@@ -119,7 +123,7 @@ ggsave(producers,filename = "producers.png", width = 16.1, height = 11, dpi = 32
        device = "jpeg", path = "/Users/abhinavsingh/Downloads/CS_710/Practice R project/Core/Coffee/", units = "in")
 
 #Countries with the best coffee (Ethiopia wins)
-df <- read.csv(text = x)
+df <- read.csv('coffee_data_i.csv')
 {  
 
   df$best_countries <- 0
@@ -175,7 +179,7 @@ ggsave(best_countries,filename = "best_countries.png", width = 7.5, height = 12,
 
 
 #Does the colour of the beans affect quality? 
-df <- read.csv(text = x)
+df <- read.csv('coffee_data_i.csv')
 {
 df_color<- df %>% 
   mutate(total_cup_points_std = (total_cup_points - mean(total_cup_points))/sd(total_cup_points))
@@ -215,7 +219,7 @@ ggsave(d_color ,filename = "color_v.png", width = 8, height = 12, dpi = 320,
 
 
 #Does processing method affect coffee?
-df <- read.csv(text = x)
+df <- read.csv('coffee_data_i.csv')
 {
   df<- df %>% 
     mutate(total_cup_points_std = (total_cup_points - mean(total_cup_points))/sd(total_cup_points))
@@ -267,8 +271,9 @@ ggsave(processing,filename = "processing_v.png", width = 8, height = 12, dpi = 3
 
 #ALTITUDE
 
-y <- getURL("https://raw.githubusercontent.com/abhinavsingh101/cs710_final/main/coffee_data_regions50.csv")
-df_2 <- read.csv(text = y)
+#y <- getURL("https://raw.githubusercontent.com/abhinavsingh101/cs710_final/main/coffee_data_regions50.csv")
+#df_2 <- read.csv(text = y)
+df_2 <- read_csv('coffee_data_regions50.csv')
 
 {df_2 <- df_2 %>%
   filter(country_of_origin != 'India')
@@ -290,8 +295,6 @@ top_region_country<- df_2 %>%
   top_region_country$id[top_region_country$country_of_origin=='Honduras']<-23
   top_region_country$id[top_region_country$country_of_origin=='Nicaragua']<-24
   top_region_country$id[top_region_country$country_of_origin=='El Salvador']<-25
-  
-  
   
   df_top_regions <- df_2 %>%
     group_by(region) %>%

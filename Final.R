@@ -1,12 +1,20 @@
-library(tidyverse)
-install.packages("ggrepel")
-install.packages("extrafont")
-library(ggrepel)
-library(RColorBrewer)
-library(dplyr)
-library(extrafont)
-library(RCurl)
+#Install packages
+{install.packages("ggrepel")
+  install.packages("extrafont")}
+
+#Load packages
+{
+  library(tidyverse)
+  library(ggrepel)
+  library(RColorBrewer)
+  library(dplyr)
+  library(extrafont)
+  library(RCurl)
+}
+
+# Import Avenir (font)
 font_import() ## Press y in the console to import fonts, and wait for it to finish
+
 pal <- c("#A6CEE3", "#1F78B4", "#B2DF8A", "#33A02C", 
          "#FB9A99", "#E31A1C", "#FDBF6F", "#FF7F00", 
          "#CAB2D6","#6A3D9A", "#E9E909", "#B15928") 
@@ -90,7 +98,6 @@ df_2 <- read_csv('coffee_data_regions50.csv')
         colour = "grey50")
     )+
     scale_color_manual(values=pal) +
-    #    scale_colour_brewer(palette = "Paired") +
     scale_x_continuous(limits = c(800, 2500))
   
   altitude
@@ -116,7 +123,9 @@ df <- read.csv('coffee_data_i.csv')
              (country_of_origin == 'Honduras') | (country_of_origin == 'Kenya') | 
              (country_of_origin == 'Mexico') | (country_of_origin == 'Nicaragua') | 
              (country_of_origin == 'Tanzania, United Republic Of') | (country_of_origin == 'Uganda')) %>%
-    ggplot(mapping = aes(x = variety, y = cup_pts, color = country_of_origin, size = vol, alpha = 0.9)) +
+    ggplot(mapping = aes(x = variety, y = cup_pts, 
+                         color = country_of_origin, 
+                         size = vol, alpha = 0.9)) +
     geom_jitter(width=0.2) +
     geom_label_repel(aes(label = ifelse(vol>1000000 | cup_pts > 83 ,as.character(country_of_origin),'')),
                      min.segment.length = Inf,
@@ -129,8 +138,10 @@ df <- read.csv('coffee_data_i.csv')
     ) +
     coord_cartesian(ylim = c(80, 86)) +
     scale_size(range = c(8, 25)) +
-    guides(colour = guide_legend(title='Country of origin', override.aes = list(size=8, alpha=0.9)),
-           alpha=FALSE, size = guide_legend(title = 'Total volume')) +
+    guides(colour = guide_legend(title='Country of origin', 
+                                 override.aes = list(size=8, alpha=0.9)),
+           alpha=FALSE, 
+           size = guide_legend(title = 'Total volume')) +
     scale_color_manual(values=pal) +
     labs(title="Which countries the major coffee varieties come from",
          x ="Major Coffee Varieties", y = "Cupping points") +
@@ -180,7 +191,9 @@ df <- read.csv('coffee_data_i.csv')
     labs(title="The best coffee producing companies in the world (by country)",
          subtitle = "along with their variety, processing methods and sales volume",
          x ="Country of origin", y = "Cupping points")+
-    guides(colour = guide_legend(title = 'Coffee variety', override.aes = list(size=8, alpha=0.8)), alpha=FALSE, 
+    guides(colour = guide_legend(title = 'Coffee variety', 
+                                 override.aes = list(size=8, alpha=0.8)), 
+           alpha=FALSE, 
            size = guide_legend(title = 'Total volume'),
            shape = guide_legend(title = 'Processing method', override.aes = list(size=8))) +
     theme(plot.title=element_text(size=26, face="bold",family="Avenir"),
@@ -195,6 +208,7 @@ df <- read.csv('coffee_data_i.csv')
           legend.box="vertical", legend.margin=margin(),
           legend.title=element_text(size=15,family="Avenir"))+
     coord_cartesian(ylim = c(80, 86))
+  
   producers
 }
 #ggsave(producers,filename = "producers.png", width = 16.1, height = 11, dpi = 320,
@@ -232,7 +246,8 @@ df <- read.csv('coffee_data_i.csv')
     scale_y_continuous(name="Cupping points", limits=c(70,90),
                        breaks = c(70, 75, 80, 85, 90))+
     
-    scale_x_discrete(labels = c("Remaining \ncountries", "Costa Rica", "Uganda", "Kenya", "Ethiopia"))+
+    scale_x_discrete(labels = c("Remaining \ncountries", "Costa Rica", 
+                                "Uganda", "Kenya", "Ethiopia"))+
     stat_summary(fun=mean, geom="point", size=3, color="grey") +
     labs(title="Ethiopian coffee is better \nthan the rest",
          y = "Cupping points")+
@@ -261,10 +276,13 @@ df <- read.csv('coffee_data_i.csv')
 {
 df_color<- df %>% 
   mutate(total_cup_points_std = (total_cup_points - mean(total_cup_points))/sd(total_cup_points))
+
 df$color <- as.factor(df$color)
+
 d_color <- ggplot(data=subset(df_color, !is.na(color)),
-                  aes(x = color, y=total_cup_points_std, color=color)) + geom_jitter(alpha=0.8, size=2) +
-  #  scale_colour_manual(values = c('#2596be','#01f8ba','#13b35e','#a6cee3')) +
+                  aes(x = color, y=total_cup_points_std, color=color)) + 
+  geom_jitter(alpha=0.8, size=2) +
+  # scale_colour_manual(values = c('#2596be','#01f8ba','#13b35e','#a6cee3')) +
   #    scale_y_continuous(name="Cupping points", limits=c(70,95),
   #                       breaks = c(75, 90))
   scale_y_continuous(name="Cupping points", limits=c(-2,2),
@@ -329,8 +347,6 @@ df <- read.csv('coffee_data_i.csv')
           legend.position = "none",
           axis.title.y = element_blank(),
           panel.background = element_rect(
-            #fill = '#e7f4ed', 
-            #fill = '#dfe4df',
             fill = 'white',
             colour = "grey50")) +
     labs(title = "Processing method has no \nrelationship with cupping points",

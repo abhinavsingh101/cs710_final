@@ -10,7 +10,8 @@ font_import() ## Press y in the console to import fonts, and wait for it to fini
 pal <- c("#A6CEE3", "#1F78B4", "#B2DF8A", "#33A02C", 
          "#FB9A99", "#E31A1C", "#FDBF6F", "#FF7F00", 
          "#CAB2D6","#6A3D9A", "#E9E909", "#B15928") 
-#ALTITUDE
+
+#How altitude affects coffee quality
 
 df_2 <- read_csv('coffee_data_regions50.csv')
 

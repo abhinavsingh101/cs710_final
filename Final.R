@@ -10,12 +10,93 @@ font_import() ## Press y in the console to import fonts, and wait for it to fini
 pal <- c("#A6CEE3", "#1F78B4", "#B2DF8A", "#33A02C", 
          "#FB9A99", "#E31A1C", "#FDBF6F", "#FF7F00", 
          "#CAB2D6","#6A3D9A", "#E9E909", "#B15928") 
+#ALTITUDE
 
-#The dataset I will be using for the visualisation
-#x <- getURL("https://raw.githubusercontent.com/abhinavsingh101/cs710_final/main/coffee_data_i.csv")
-#y <- getURL("https://raw.githubusercontent.com/abhinavsingh101/cs710_final/main/coffee_data_regions50.csv")
+df_2 <- read_csv('coffee_data_regions50.csv')
 
-#df <- read.csv(text = x)
+{df_2 <- df_2 %>%
+    filter(country_of_origin != 'India')
+  top_region_country<- df_2 %>% 
+    count(region, country_of_origin) %>%
+    group_by(region)%>%
+    slice(which.max(n))
+  
+  # creating a nummeric ID for each country
+  top_region_country$id[top_region_country$country_of_origin=='Tanzania, United Republic Of'] <-14
+  top_region_country$id[top_region_country$country_of_origin=='Kenya']<-19
+  top_region_country$id[top_region_country$country_of_origin=='Costa Rica']<-16
+  top_region_country$id[top_region_country$country_of_origin=='Guatemala']<-17
+  top_region_country$id[top_region_country$country_of_origin=='Mexico']<-18
+  top_region_country$id[top_region_country$country_of_origin=='Ethiopia']<-15
+  top_region_country$id[top_region_country$country_of_origin=='Uganda']<-20
+  top_region_country$id[top_region_country$country_of_origin=='Colombia']<-21
+  top_region_country$id[top_region_country$country_of_origin=='Brazil'] <-22
+  top_region_country$id[top_region_country$country_of_origin=='Honduras']<-23
+  top_region_country$id[top_region_country$country_of_origin=='Nicaragua']<-24
+  top_region_country$id[top_region_country$country_of_origin=='El Salvador']<-25
+  
+  df_top_regions <- df_2 %>%
+    group_by(region) %>%
+    summarise(cupping_points=median(total_cup_points),
+              total_volume=sum(volume),
+              altitude = median(altitude_mean_meters),
+              na.rm = TRUE)
+  
+  df_countries <- merge(df_top_regions, top_region_country, by='region')
+  df_countries$country_of_origin <- as.factor(top_region_country$country_of_origin)
+  
+  d1<- ggplot(df_countries, 
+              aes(y=cupping_points, x=altitude,
+                  size=total_volume,
+                  alpha=0.8,
+                  colour=country_of_origin),
+              key_glyph = "point") +
+    geom_point(key_glyph = "point") + 
+    geom_label_repel(aes(label = ifelse(total_volume>1400000 | cupping_points > 85 ,as.character(region),'')),
+                     min.segment.length = Inf,
+                     box.padding   = 0.55,
+                     point.padding = 0.25,
+                     size = 5,
+                     alpha=0.9,
+                     max.overlaps=Inf,
+                     show.legend = FALSE
+    ) +
+    labs(title="How the altitude at which coffee grows affects its quality", 
+         subtitle = "and which regions and countries stand out in quality and volumes",
+         y="Cupping points",
+         x="Altitude (meters)")+
+    scale_y_continuous(name="Cupping points", limits=c(80,90),
+                       breaks = c(80, 82, 84, 86, 88, 90))
+  
+  
+  altitude <- d1 + scale_size(range = c(8, 25)) +
+    guides(
+      colour = guide_legend(
+        title = 'Country \nof origin', 
+        override.aes = list(size=8, alpha=0.9)), 
+      alpha=FALSE, 
+      size = guide_legend(title = 'Total volume')) +
+    theme(
+      axis.text=element_text(size=20,family="Avenir"),
+      axis.title=element_text(size=20,face="bold",family="Avenir"),
+      plot.title= element_text(size=25, face='bold',family="Avenir"),
+      plot.subtitle= element_text(size=20,family="Avenir"),
+      legend.position = "bottom",
+      legend.direction = "horizontal",
+      legend.title=element_text(size=15,family="Avenir"),
+      panel.background = element_rect(
+        fill = 'white',
+        colour = "grey50")
+    )+
+    scale_color_manual(values=pal) +
+    #    scale_colour_brewer(palette = "Paired") +
+    scale_x_continuous(limits = c(800, 2500))
+  
+  altitude
+}
+#ggsave(altitude,filename = "altitude.png", width = 15.1, height = 10, dpi = 320,
+#       device = "jpeg", path = "/Users/abhinavsingh/Downloads/CS_710/Practice R project/Core/Coffee/", units = "in")  
+
 
 ##Which countries the major coffee varieties come from
 df <- read.csv('coffee_data_i.csv')
@@ -49,7 +130,6 @@ df <- read.csv('coffee_data_i.csv')
     scale_size(range = c(8, 25)) +
     guides(colour = guide_legend(title='Country of origin', override.aes = list(size=8, alpha=0.9)),
            alpha=FALSE, size = guide_legend(title = 'Total volume')) +
-    #scale_colour_brewer(palette = "Paired") +
     scale_color_manual(values=pal) +
     labs(title="Which countries the major coffee varieties come from",
          x ="Major Coffee Varieties", y = "Cupping points") +
@@ -58,17 +138,14 @@ df <- read.csv('coffee_data_i.csv')
           axis.text=element_text(size=20,family="Avenir"),
           panel.background = element_rect(
             fill = "white",
-#            fill = '#F3F2EE',
             colour = "grey50")
     )+
-    #  theme(plot.margin = margin(t=4,1,1,1, "lines"))+
-    #  theme(legend.direction = "horizontal") +
     theme(legend.position = "none")
   
   variety
 }
-ggsave(variety,filename = "variety.png", width = 14, height = 8, dpi = 320,
-       device = "jpeg", path = "/Users/abhinavsingh/Downloads/CS_710/Practice R project/Core/Coffee/", units = "in")  
+#ggsave(variety,filename = "variety.png", width = 14, height = 8, dpi = 320,
+#       device = "jpeg", path = "/Users/abhinavsingh/Downloads/CS_710/Practice R project/Core/Coffee/", units = "in")  
 
 ##The best coffee producing companies (by country)
 df <- read.csv('coffee_data_i.csv')
@@ -80,8 +157,8 @@ df <- read.csv('coffee_data_i.csv')
     ) %>%
     filter(vol>100000 & cupping_points > 80)
   
-  top_producers_df$variety=ifelse(is.na(top_producers_df$variety),"Missing",top_producers_df$variety)
-  top_producers_df$processing_method = ifelse(is.na(top_producers_df$processing_method),"Missing",top_producers_df$processing_method)
+  top_producers_df$variety=ifelse(top_producers_df$variety == "","Missing",top_producers_df$variety)
+  top_producers_df$processing_method = ifelse(top_producers_df$processing_method == "","Missing",top_producers_df$processing_method)
   
   producers<- top_producers_df %>%
     ggplot(aes(size=vol, x = country_of_origin, y=cupping_points, 
@@ -119,8 +196,8 @@ df <- read.csv('coffee_data_i.csv')
     coord_cartesian(ylim = c(80, 86))
   producers
 }
-ggsave(producers,filename = "producers.png", width = 16.1, height = 11, dpi = 320,
-       device = "jpeg", path = "/Users/abhinavsingh/Downloads/CS_710/Practice R project/Core/Coffee/", units = "in")
+#ggsave(producers,filename = "producers.png", width = 16.1, height = 11, dpi = 320,
+#       device = "jpeg", path = "/Users/abhinavsingh/Downloads/CS_710/Practice R project/Core/Coffee/", units = "in")
 
 #Countries with the best coffee (Ethiopia wins)
 df <- read.csv('coffee_data_i.csv')
@@ -174,8 +251,8 @@ df <- read.csv('coffee_data_i.csv')
   best_countries
 }
 
-ggsave(best_countries,filename = "best_countries.png", width = 7.5, height = 12, dpi = 320,
-       device = "jpeg", path = "/Users/abhinavsingh/Downloads/CS_710/Practice R project/Core/Coffee/", units = "in")  
+#ggsave(best_countries,filename = "best_countries.png", width = 7.5, height = 12, dpi = 320,
+#       device = "jpeg", path = "/Users/abhinavsingh/Downloads/CS_710/Practice R project/Core/Coffee/", units = "in")  
 
 
 #Does the colour of the beans affect quality? 
@@ -211,11 +288,9 @@ d_color <- d_color + scale_x_discrete(limits = c("Green", "Bluish-Green",
 
 d_color
 }
-ggsave(d_color ,filename = "color_h.png", width = 12, height = 3, dpi = 320,
-       device = "jpeg", path = "/Users/abhinavsingh/Downloads/CS_710/Practice R project/Core/Coffee/", units = "in")  
 
-ggsave(d_color ,filename = "color_v.png", width = 8, height = 12, dpi = 320,
-       device = "jpeg", path = "/Users/abhinavsingh/Downloads/CS_710/Practice R project/Core/Coffee/", units = "in")  
+#ggsave(d_color ,filename = "color_v.png", width = 8, height = 12, dpi = 320,
+#       device = "jpeg", path = "/Users/abhinavsingh/Downloads/CS_710/Practice R project/Core/Coffee/", units = "in")  
 
 
 #Does processing method affect coffee?
@@ -263,101 +338,7 @@ df <- read.csv('coffee_data_i.csv')
   
   processing
 }
-ggsave(processing,filename = "processing_h.png", width = 12, height = 3, dpi = 320,
-       device = "jpeg", path = "/Users/abhinavsingh/Downloads/CS_710/Practice R project/Core/Coffee/", units = "in")  
 
-ggsave(processing,filename = "processing_v.png", width = 8, height = 12, dpi = 320,
-       device = "jpeg", path = "/Users/abhinavsingh/Downloads/CS_710/Practice R project/Core/Coffee/", units = "in")  
-
-#ALTITUDE
-
-#y <- getURL("https://raw.githubusercontent.com/abhinavsingh101/cs710_final/main/coffee_data_regions50.csv")
-#df_2 <- read.csv(text = y)
-df_2 <- read_csv('coffee_data_regions50.csv')
-
-{df_2 <- df_2 %>%
-  filter(country_of_origin != 'India')
-top_region_country<- df_2 %>% 
-    count(region, country_of_origin) %>%
-    group_by(region)%>%
-    slice(which.max(n))
-  
-  # creating a nummeric ID for each country
-  top_region_country$id[top_region_country$country_of_origin=='Tanzania, United Republic Of'] <-14
-  top_region_country$id[top_region_country$country_of_origin=='Kenya']<-19
-  top_region_country$id[top_region_country$country_of_origin=='Costa Rica']<-16
-  top_region_country$id[top_region_country$country_of_origin=='Guatemala']<-17
-  top_region_country$id[top_region_country$country_of_origin=='Mexico']<-18
-  top_region_country$id[top_region_country$country_of_origin=='Ethiopia']<-15
-  top_region_country$id[top_region_country$country_of_origin=='Uganda']<-20
-  top_region_country$id[top_region_country$country_of_origin=='Colombia']<-21
-  top_region_country$id[top_region_country$country_of_origin=='Brazil'] <-22
-  top_region_country$id[top_region_country$country_of_origin=='Honduras']<-23
-  top_region_country$id[top_region_country$country_of_origin=='Nicaragua']<-24
-  top_region_country$id[top_region_country$country_of_origin=='El Salvador']<-25
-  
-  df_top_regions <- df_2 %>%
-    group_by(region) %>%
-    summarise(cupping_points=median(total_cup_points),
-              total_volume=sum(volume),
-              altitude = median(altitude_mean_meters),
-              na.rm = TRUE)
-  
-  df_countries <- merge(df_top_regions, top_region_country, by='region')
-  df_countries$country_of_origin <- as.factor(top_region_country$country_of_origin)
-  
-  d1<- ggplot(df_countries, 
-              aes(y=cupping_points, x=altitude,
-                  size=total_volume,
-                  alpha=0.8,
-                  colour=country_of_origin),
-              key_glyph = "point") +
-    geom_point(key_glyph = "point") + 
-    geom_label_repel(aes(label = ifelse(total_volume>1400000 | cupping_points > 85 ,as.character(region),'')),
-                     min.segment.length = Inf,
-                     box.padding   = 0.55,
-                     point.padding = 0.25,
-                     size = 5,
-                     alpha=0.9,
-                     max.overlaps=Inf,
-                     show.legend = FALSE
-    ) +
-    labs(title="How the altitude at which coffee grows affects its quality", 
-         subtitle = "and which regions and countries stand out in quality and volumes",
-         y="Cupping points",
-         x="Altitude (meters)")+
-    scale_y_continuous(name="Cupping points", limits=c(80,90),
-                       breaks = c(80, 82, 84, 86, 88, 90))
-
-#    theme(plot.title=element_text(size=17, face="bold"),
-#          axis.title=element_text(size=15,face="bold"),
-#          axis.text=element_text(size=15))
-  
-  altitude <- d1 + scale_size(range = c(8, 25)) +
-    guides(
-      colour = guide_legend(
-        title = 'Country \nof origin', 
-        override.aes = list(size=8, alpha=0.9)), 
-      alpha=FALSE, 
-      size = guide_legend(title = 'Total volume')) +
-    theme(
-      axis.text=element_text(size=20,family="Avenir"),
-      axis.title=element_text(size=20,face="bold",family="Avenir"),
-      plot.title= element_text(size=25, face='bold',family="Avenir"),
-      plot.subtitle= element_text(size=20,family="Avenir"),
-      legend.position = "bottom",
-      legend.direction = "horizontal",
-      legend.title=element_text(size=15,family="Avenir"),
-      panel.background = element_rect(
-        fill = 'white',
-        colour = "grey50")
-    )+
-    scale_color_manual(values=pal) +
-#    scale_colour_brewer(palette = "Paired") +
-    scale_x_continuous(limits = c(800, 2500))
-  
-  altitude
-  }
-ggsave(altitude,filename = "altitude.png", width = 15.1, height = 10, dpi = 320,
-       device = "jpeg", path = "/Users/abhinavsingh/Downloads/CS_710/Practice R project/Core/Coffee/", units = "in")  
+#ggsave(processing,filename = "processing_v.png", width = 8, height = 12, dpi = 320,
+#       device = "jpeg", path = "/Users/abhinavsingh/Downloads/CS_710/Practice R project/Core/Coffee/", units = "in")  
 

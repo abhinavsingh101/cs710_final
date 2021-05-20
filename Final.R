@@ -1,4 +1,3 @@
-
 library(tidyverse)
 install.packages("ggrepel")
 install.packages("extrafont")
@@ -6,17 +5,18 @@ library(ggrepel)
 library(RColorBrewer)
 library(dplyr)
 library(extrafont)
+library(RCurl)
 font_import() ## Press y in the console to import fonts, and wait for it to finish
 setwd('/Users/abhinavsingh/Downloads/CS_710/Practice R project/Core/Coffee')
 
 pal <- c("#A6CEE3", "#1F78B4", "#B2DF8A", "#33A02C", "#FB9A99", "#E31A1C", "#FDBF6F", "#FF7F00", "#CAB2D6",
          "#6A3D9A", "#E9E909", "#B15928") 
 
-df <- read_csv('coffee_data_i.csv')
-#df$variety <- as.factor(df$variety)
-#VARIETY
+x <- getURL("https://raw.githubusercontent.com/abhinavsingh101/cs710_final/main/coffee_data_i.csv")
+
+df <- read.csv(text = x)
+##Which countries the major coffee varieties come from
 {
-#  df <- read_csv('coffee_data_i.csv')
   df$variety <- as.factor(df$variety)
   
   variety <- df%>%
@@ -66,8 +66,8 @@ df <- read_csv('coffee_data_i.csv')
 ggsave(variety,filename = "variety.png", width = 14, height = 8, dpi = 320,
        device = "jpeg", path = "/Users/abhinavsingh/Downloads/CS_710/Practice R project/Core/Coffee/", units = "in")  
 
-#PRODUCERS
-df <- read_csv('coffee_data_i.csv')
+##The best coffee producing companies (by country)
+df <- read.csv(text = x)
 {
 #  df <- read_csv('coffee_data_i.csv')
   
@@ -118,8 +118,8 @@ df <- read_csv('coffee_data_i.csv')
 ggsave(producers,filename = "producers.png", width = 16.1, height = 11, dpi = 320,
        device = "jpeg", path = "/Users/abhinavsingh/Downloads/CS_710/Practice R project/Core/Coffee/", units = "in")
 
-#BEST COUNTRIES
-df <- read_csv('coffee_data_i.csv')
+#Countries with the best coffee (Ethiopia wins)
+df <- read.csv(text = x)
 {  
 
   df$best_countries <- 0
@@ -160,7 +160,8 @@ df <- read_csv('coffee_data_i.csv')
           axis.text=element_text(size=22,family="Avenir"),
           axis.title.y = element_blank(),
           panel.background = element_rect(
-            fill = '#e7f4ed',
+            fill = 'white',
+#            fill = '#e7f4ed',
             colour = "grey50"),
           legend.position = "none")+
     scale_fill_brewer(palette="Blues")+
@@ -169,12 +170,12 @@ df <- read_csv('coffee_data_i.csv')
   best_countries
 }
 
-#ggsave(best_countries,filename = "best_countries.png", width = 7.5, height = 12, dpi = 320,
-#       device = "jpeg", path = "/Users/abhinavsingh/Downloads/CS_710/Practice R project/Core/Coffee/", units = "in")  
+ggsave(best_countries,filename = "best_countries.png", width = 7.5, height = 12, dpi = 320,
+       device = "jpeg", path = "/Users/abhinavsingh/Downloads/CS_710/Practice R project/Core/Coffee/", units = "in")  
 
 
-# COLOUR
-df <- read_csv('coffee_data_i.csv')
+#Does the colour of the beans affect quality? 
+df <- read.csv(text = x)
 {
 df_color<- df %>% 
   mutate(total_cup_points_std = (total_cup_points - mean(total_cup_points))/sd(total_cup_points))
@@ -199,22 +200,22 @@ d_color <- d_color + scale_x_discrete(limits = c("Green", "Bluish-Green",
         legend.position = "none",
         axis.title.y = element_blank(),
         panel.background = element_rect(
-          fill = '#e7f4ed',
+          fill = 'white',
           colour = "grey50")
   ) + 
   labs(title = "Colour has no relationship \nwith cupping points")
 
 d_color
 }
-#ggsave(d_color ,filename = "color_h.png", width = 12, height = 3, dpi = 320,
-#       device = "jpeg", path = "/Users/abhinavsingh/Downloads/CS_710/Practice R project/Core/Coffee/", units = "in")  
+ggsave(d_color ,filename = "color_h.png", width = 12, height = 3, dpi = 320,
+       device = "jpeg", path = "/Users/abhinavsingh/Downloads/CS_710/Practice R project/Core/Coffee/", units = "in")  
 
-#ggsave(d_color ,filename = "color_v.png", width = 8, height = 12, dpi = 320,
-#       device = "jpeg", path = "/Users/abhinavsingh/Downloads/CS_710/Practice R project/Core/Coffee/", units = "in")  
+ggsave(d_color ,filename = "color_v.png", width = 8, height = 12, dpi = 320,
+       device = "jpeg", path = "/Users/abhinavsingh/Downloads/CS_710/Practice R project/Core/Coffee/", units = "in")  
 
 
-#PROCESSING
-df <- read_csv('coffee_data_i.csv')
+#Does processing method affect coffee?
+df <- read.csv(text = x)
 {
   df<- df %>% 
     mutate(total_cup_points_std = (total_cup_points - mean(total_cup_points))/sd(total_cup_points))
@@ -265,10 +266,13 @@ ggsave(processing,filename = "processing_v.png", width = 8, height = 12, dpi = 3
        device = "jpeg", path = "/Users/abhinavsingh/Downloads/CS_710/Practice R project/Core/Coffee/", units = "in")  
 
 #ALTITUDE
-df_2 <- read_csv('coffee_data_regions50.csv')
-df_2 <- df_2 %>%
+
+y <- getURL("https://raw.githubusercontent.com/abhinavsingh101/cs710_final/main/coffee_data_regions50.csv")
+df_2 <- read.csv(text = y)
+
+{df_2 <- df_2 %>%
   filter(country_of_origin != 'India')
-{top_region_country<- df_2 %>% 
+top_region_country<- df_2 %>% 
     count(region, country_of_origin) %>%
     group_by(region)%>%
     slice(which.max(n))
